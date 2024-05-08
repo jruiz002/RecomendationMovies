@@ -6,6 +6,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const recommendationRoutes = require("../src/Routes/RecommendationRoutes");
 const userRoutes = require("../src/Routes/userRoutes")
+const movieRoutes = require("../src/Routes/movieRoutes")
 
 const app = express();
 
@@ -18,6 +19,6 @@ app.use(cors());
 // PRE-RUTAS DEL SERVIDOR
 app.use("/recommendation", recommendationRoutes)
 app.use("/user", userRoutes)
-
+app.use("/movie", movieRoutes)
 
 module.exports = app;
