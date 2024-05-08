@@ -121,3 +121,69 @@ exports.funcRecommendationActor = async (req, res) => {
     }
   }
 }
+
+exports.funcRecommendationDirector = async (req, res) => {
+  const { username } = req.body;
+  let driver;
+  try {
+    driver = await connectDB();
+    const session = driver.session();
+
+    // Se obtienen todas las peliculas que el usuario a visto
+    const resultMovies = await session.run(
+      `MATCH (usuario:User {username: $username})-[:WATCHED]->(pelicula:Movie) RETURN pelicula`,
+      { username }
+    );
+
+    // Se crea la lista de directores que dirigen las películas que el ha visto
+    let directors = []
+    
+    for (const record of resultMovies.records) {
+      const movie = record.get('pelicula');
+      const nameMovie = movie.properties.title;
+      const resultDirectors = await session.run(
+        `MATCH (director:Director)-[:DIRECTED]->(pelicula:Movie {title: $nameMovie}) RETURN director`,
+        { nameMovie }
+      );
+      for (const directorRecord of resultDirectors.records) {
+        const director = directorRecord.get("director");
+        directors.push(director.properties.name);
+      }
+    }
+
+    // Se crea la lista de pelicula a recomendar por director
+    let movies = []
+
+    for (const director of directors){
+      const resultMovies_Directors = await session.run(
+        `MATCH (director:Director {name: $director})-[:DIRECTED]->(pelicula:Movie) RETURN pelicula`,
+        { director }
+      )
+
+      resultMovies_Directors.records.forEach(record => {
+        const movie = record.get('pelicula');
+        movies.push(movie.properties)
+      });
+
+    }
+
+    const uniqueTitles = new Set(); // Crear un conjunto para almacenar los títulos únicos
+    const peliculasUnicas = [];
+
+    for (const pelicula of movies) {
+      if (!uniqueTitles.has(pelicula.title)) { // Verificar si el título ya ha sido visto
+        peliculasUnicas.push(pelicula); // Agregar la película a la lista de películas únicas
+        uniqueTitles.add(pelicula.title); // Agregar el título al conjunto de títulos únicos
+      }
+    }
+
+    return res.status(200).send({peliculasUnicas})
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  } finally {
+    if (driver) {
+      await driver.close();
+    }
+  }
+}

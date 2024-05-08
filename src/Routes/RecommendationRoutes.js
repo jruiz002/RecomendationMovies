@@ -6,5 +6,6 @@ const recommendation = require("../Controllers/Recommendation")
 
 api.get("/funcRecommendationGenre", recommendation.funcRecommendationGenre)
 api.get("/funcRecommendationActor", recommendation.funcRecommendationActor)
+api.get("/funcRecommendationDirector", recommendation.funcRecommendationDirector)
 
 module.exports = api;
