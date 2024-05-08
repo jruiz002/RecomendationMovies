@@ -1,6 +1,7 @@
 "use strict"
 const { connectDB } = require('../../configs/neo4jConfig');
 
+// Función que recomienda películas a través de los géneros que le gustan a un usuario.
 exports.funcRecommendationGenre = async (req, res) => {
   const { username } = req.body;
   let driver;
@@ -40,7 +41,7 @@ exports.funcRecommendationGenre = async (req, res) => {
         uniqueTitles.add(pelicula.title); // Agregar el título al conjunto de títulos únicos
       }
     }
-    
+
     return res.status(200).json({ peliculasUnicas });
 
   } catch (error) {
@@ -52,3 +53,71 @@ exports.funcRecommendationGenre = async (req, res) => {
     }
   }
 };
+
+
+exports.funcRecommendationActor = async (req, res) => {
+  const { username } = req.body;
+  let driver;
+  try {
+    driver = await connectDB();
+    const session = driver.session();
+
+    // Se obtienen todas las peliculas que el usuario a visto
+    const resultMovies = await session.run(
+      `MATCH (usuario:User {username: $username})-[:WATCHED]->(pelicula:Movie)
+      RETURN pelicula`,
+      { username }
+    );
+
+    // Se crea la lista de actores que actuan en las películas que el ha visto
+    let actors = []
+    
+    for (const record of resultMovies.records) {
+      const movie = record.get('pelicula');
+      const nameMovie = movie.properties.title;
+      const resultActors = await session.run(
+        `MATCH (actor:Actor)-[:ACTED_IN]->(pelicula:Movie {title: $nameMovie}) RETURN actor`,
+        { nameMovie }
+      );
+      for (const actorRecord of resultActors.records) {
+        const actor = actorRecord.get("actor");
+        actors.push(actor.properties.name);
+      }
+    }
+
+    // Se crea la lista de pelicula a recomendar por actor
+    let movies = []
+
+    for (const actor of actors){
+      const resultMovies_Actors = await session.run(
+        `MATCH (actor:Actor {name: $actor})-[:ACTED_IN]->(pelicula:Movie) RETURN pelicula`,
+        { actor }
+      )
+
+      resultMovies_Actors.records.forEach(record => {
+        const movie = record.get('pelicula');
+        movies.push(movie.properties)
+      });
+
+    }
+
+    const uniqueTitles = new Set(); // Crear un conjunto para almacenar los títulos únicos
+    const peliculasUnicas = [];
+
+    for (const pelicula of movies) {
+      if (!uniqueTitles.has(pelicula.title)) { // Verificar si el título ya ha sido visto
+        peliculasUnicas.push(pelicula); // Agregar la película a la lista de películas únicas
+        uniqueTitles.add(pelicula.title); // Agregar el título al conjunto de títulos únicos
+      }
+    }
+
+    return res.status(200).send({peliculasUnicas})
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  } finally {
+    if (driver) {
+      await driver.close();
+    }
+  }
+}

@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.use(cors());
 
-// RUTAS DEL SERVIDOR
+// PRE-RUTAS DEL SERVIDOR
 app.use("/recommendation", recommendationRoutes)
 app.use("/user", userRoutes)
 
