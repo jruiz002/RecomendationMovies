@@ -7,6 +7,9 @@ const bodyParser = require('body-parser');
 const recommendationRoutes = require("../src/Routes/RecommendationRoutes");
 const userRoutes = require("../src/Routes/userRoutes")
 const movieRoutes = require("../src/Routes/movieRoutes")
+const actorRoutes = require("../src/Routes/actorRoutes")
+const directorRoutes = require("../src/Routes/directorRoutes")
+const genreRoutes = require("../src/Routes/genreRoutes")
 
 const app = express();
 
@@ -20,5 +23,8 @@ app.use(cors());
 app.use("/recommendation", recommendationRoutes)
 app.use("/user", userRoutes)
 app.use("/movie", movieRoutes)
+app.use("/actor", actorRoutes)
+app.use("/director", directorRoutes)
+app.use("/genre", genreRoutes)
 
 module.exports = app;
