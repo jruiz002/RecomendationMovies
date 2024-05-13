@@ -71,3 +71,57 @@ exports.updateMovie = async (req, res) =>{
         }
     }
 }
+// Función para verificar si la pelicula ya existe
+exports.movieExists= async(title)=> {
+    let driver;
+    try {
+        driver = await connectDB();
+        const session = driver.session();
+        const result = await session.run(
+            'MATCH (m:Movie {title: $title}) RETURN m',
+            { title: title }
+        );
+        return result.records.length > 0;
+    } catch (error) {
+        console.error("Error al verificar si la película existe ", error);
+        throw error;
+    } finally {
+        if (driver) {
+            await driver.close();
+        }
+    }
+}
+//Metodo para crear una pelicula 
+exports.addMovie= async(param, rs)=>{
+const body = param.body
+const {title,release_year ,duration_minutes,rating}=body 
+let control
+
+try{
+    //Parametros a usar 
+    const ms = await dataObligatory(body)
+    if(ms) return rs.status(400).send(ms)
+    //Validar que la pelicula no exista aun 
+    const movieExists=await this.movieExists(title)
+    if(movieExists){
+        return rs.status(400).json({ error: "La pelicula ya existe" })
+    }
+    control = await connectDB();
+    const sesion = control.session ()
+    const result= await sesion.run(
+    `CREATE (:Movie {title: $title, release_year: $release_year, duration_minutes: $duration_minutes, rating: $rating} )`,
+            { title, release_year, duration_minutes, rating}
+        );
+    return rs.status(200).send({message: "Pelicula creada exitosamente"})
+
+}catch{
+    console.error('Error executing query:', error);
+        return rs.status(500).json({ error: 'Error interno del servidor' });
+    } finally {
+        if (control) {
+          await control.close();
+        }
+      }
+    
+}
+
