@@ -125,3 +125,30 @@ try{
     
 }
 
+exports.getMovies = async (req, res) => {
+    let driver
+    try {
+        driver = await connectDB();
+        const session = driver.session();
+        const result = await session.run(
+            `MATCH (n:Movie) RETURN n`,
+        );
+        // Se crea la lista de movies
+        let movies = []
+
+        result.records.forEach(record => {
+            const movie = record.get('n');
+            movies.push(movie.properties)
+        });
+
+        return res.status(200).send({movies})
+
+    } catch (error) {
+
+    } finally {
+        if (driver) {
+            await driver.close();
+        }
+    }
+}
+

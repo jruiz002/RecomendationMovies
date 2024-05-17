@@ -6,6 +6,7 @@ const movieController = require("../Controllers/movieController")
 
 api.put("/updateMovie/:id", movieController.updateMovie);
 api.post("/addMovie",movieController.addMovie )
+api.get("/getMovies", movieController.getMovies)
 
 
 
