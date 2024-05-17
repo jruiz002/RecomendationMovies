@@ -187,3 +187,72 @@ exports.funcRecommendationDirector = async (req, res) => {
     }
   }
 }
+
+exports.relationMovieGenre = async (req, res) => {
+  let driver;
+  try {
+    const { title, genre } = req.body;
+    driver = await connectDB();
+    const session = driver.session();
+    const result = await session.run(
+      `MATCH (g:Genre {name: $genre}), (m:Movie {title: $title}) 
+       MERGE (m)-[:HAS_GENRE]->(g)`, 
+      { title, genre }
+    );
+
+    return res.status(200).send({ message: "Relación creada." });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  } finally {
+    if (driver) {
+      await driver.close();
+    }
+  }
+}
+
+exports.relationMovieActor = async (req, res) => {
+  let driver;
+  try {
+    const { title, actor } = req.body;
+    driver = await connectDB();
+    const session = driver.session();
+    const result = await session.run(
+      `MATCH (a:Actor {name: $actor}), (m:Movie {title: $title}) 
+       MERGE (a)-[:ACTED_IN]->(m)`,  
+      { title, actor }
+    );
+
+    return res.status(200).send({ message: "Relación creada." });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  } finally {
+    if (driver) {
+      await driver.close();
+    }
+  }
+}
+
+exports.relationMovieDirector = async (req, res) => {
+  let driver;
+  try {
+    const { title, director } = req.body;
+    driver = await connectDB();
+    const session = driver.session();
+    const result = await session.run(
+      `MATCH (d:Director {name: $director}), (m:Movie {title: $title}) 
+       MERGE (d)-[:DIRECTED]->(m)`, 
+      { title, director }
+    );
+
+    return res.status(200).send({ message: "Relación creada." });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  } finally {
+    if (driver) {
+      await driver.close();
+    }
+  }
+}
