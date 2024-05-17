@@ -71,3 +71,30 @@ exports.createGenre = async (req, res) =>{
         }
       }
 }
+
+exports.getGenres = async (req, res) => {
+  let driver
+  try {
+      driver = await connectDB();
+      const session = driver.session();
+      const result = await session.run(
+          `MATCH (n:Genre) RETURN n`,
+      );
+      // Se crea la lista de actores
+      let genres = []
+
+      result.records.forEach(record => {
+          const genre = record.get('n');
+          genres.push(genre.properties)
+      });
+
+      return res.status(200).send({genres})
+
+  } catch (error) {
+
+  } finally {
+      if (driver) {
+          await driver.close();
+      }
+  }
+}

@@ -32,3 +32,30 @@ exports.createDirector = async (req, res) =>{
         }
       }
 }
+
+exports.getDirector = async (req, res) => {
+    let driver
+    try {
+        driver = await connectDB();
+        const session = driver.session();
+        const result = await session.run(
+            `MATCH (n:Director) RETURN n`,
+        );
+        // Se crea la lista de actores
+        let directors = []
+
+        result.records.forEach(record => {
+            const director = record.get('n');
+            directors.push(director.properties)
+        });
+
+        return res.status(200).send({directors})
+
+    } catch (error) {
+
+    } finally {
+        if (driver) {
+            await driver.close();
+        }
+    }
+}

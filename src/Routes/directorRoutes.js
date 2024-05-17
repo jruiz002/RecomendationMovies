@@ -4,7 +4,8 @@ const express = require('express');
 const api = express.Router();
 const directorController = require("../Controllers/directorController");
 
-api.get("/createDirector", directorController.createDirector);
+api.post("/createDirector", directorController.createDirector);
+api.get("/getDirector", directorController.getDirector)
 
 
 module.exports = api;
